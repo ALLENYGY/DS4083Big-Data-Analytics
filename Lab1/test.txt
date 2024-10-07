@@ -1,0 +1,4 @@
+Hello Hadoop
+Hello MapReduce
+Hadoop MapReduce Example
+
