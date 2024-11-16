@@ -163,3 +163,4 @@ cython_debug/
 output/
 .DS_Store
 Doc/
+Project/
