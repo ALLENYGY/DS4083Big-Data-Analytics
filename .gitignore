@@ -165,3 +165,4 @@ output/
 Doc/
 Project/
 .tmp/
+*.xlsx
