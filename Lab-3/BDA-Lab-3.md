@@ -127,19 +127,19 @@ As part of this project, I explored various machine learning models for predicti
 
 Each of these models has been trained and evaluated using the same dataset to compare their performance. Below is an overview of the steps taken, the rationale behind choosing each model, and the results obtained.
 
-#### **Random Forest Classifier**
+#### Random Forest Classifier
 
 Random Forest is an ensemble learning method that aggregates predictions from multiple decision trees to improve accuracy and reduce overfitting. It is particularly effective when dealing with large datasets and high-dimensional feature spaces, as it helps to capture complex relationships between the features and the target variable.
 
 - **Performance**: The Random Forest model showed the best performance among the models tested, achieving an **accuracy** of **0.565** and an **AUC** score of **0.5443**. This suggests that the model was effective at capturing the patterns in the data and produced relatively robust results compared to the other models.
 
-#### **XGBoost**
+#### XGBoost
 
 XGBoost is a gradient boosting algorithm known for its efficiency and performance in structured/tabular data. It builds an ensemble of trees sequentially, where each new tree attempts to correct the errors made by the previous ones. XGBoost is widely used for tasks where predictive performance is critical.
 
 - **Performance**: The XGBoost model achieved an **accuracy** of **0.475** and an **AUC** score of **0.4768**. While it showed reasonable performance, the lower accuracy and AUC indicate that XGBoost was less effective in capturing the complexities of the dataset compared to other models.
 
-#### **Gradient Boosting**
+#### Gradient Boosting
 
 Gradient Boosting is another ensemble technique that builds trees sequentially, optimizing for the loss function. Like XGBoost, it focuses on correcting errors made by earlier models, but it can be more sensitive to hyperparameters and the data itself.
 
@@ -150,6 +150,150 @@ Based on the comparative analysis of the models, **Random Forest** was chosen as
 **Robust Performance**: Random Forest demonstrated the best overall performance, with the highest accuracy and AUC score. This indicates that it was able to capture the underlying patterns in the data most effectively.
 **Reduced Overfitting**: As an ensemble method, Random Forest helps mitigate overfitting, which can be a common issue with individual decision trees. This makes it more reliable in producing accurate predictions on unseen data.
 **Interpretability and Flexibility**: While Random Forest may not be as interpretable as simpler models, it provides an effective balance between model complexity and prediction accuracy. It also handles high-dimensional datasets well, which is critical in CTR prediction tasks where the feature space can be large and complex.
+
+```python
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve
+import matplotlib.pyplot as plt
+import xgboost as xgb
+from sklearn.ensemble import GradientBoostingClassifier
+
+
+def ctr_prediction_RandomForest(data):
+    """
+    Function to predict Click-Through Rate (CTR) using a machine learning model.
+    
+    Parameters:
+    - data: pandas DataFrame, where the last column is 'CTR' (target variable).
+    
+    Returns:
+    - model: trained model.
+    - accuracy: model's accuracy score.
+    - auc: ROC-AUC score.
+    - y_pred: Predicted CTR values.
+    """
+    # Preprocessing steps (same as before)
+    if data.isnull().sum().any():
+        data = data.dropna()
+
+    categorical_cols = ['user_location', 'ad_type']  # Example categorical columns
+    data = pd.get_dummies(data, columns=categorical_cols, drop_first=True)
+
+    X = data.drop(columns=['CTR'])  # Features
+    y = data['CTR']  # Target variable: CTR (0 = No Click, 1 = Click)
+
+    # Train-Test Split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Initialize and train the model (e.g., Random Forest, Logistic Regression, etc.)
+    model = RandomForestClassifier(random_state=42)
+    model.fit(X_train, y_train)
+
+    # Make predictions
+    y_pred = model.predict(X_test)
+
+    # Evaluate performance
+    accuracy = accuracy_score(y_test, y_pred)
+    auc = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
+
+    # Step 9: Plotting Model Performance (Optional)
+    # Plot ROC curve
+    fpr, tpr, thresholds = roc_curve(y_test, model.predict_proba(X_test)[:, 1])
+    plt.figure(figsize=(8, 6))
+    plt.plot(fpr, tpr, color='blue', label='ROC Curve')
+    plt.plot([0, 1], [0, 1], color='gray', linestyle='--')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve')
+    plt.legend(loc='lower right')
+    plt.show()
+
+    return model, accuracy, auc, y_pred
+
+
+def ctr_prediction_xgboost(data):
+    """
+    Function to predict Click-Through Rate (CTR) using XGBoost Classifier.
+    
+    Parameters:
+    - data: pandas DataFrame, where the last column is 'CTR' (target variable).
+    
+    Returns:
+    - model: trained XGBoost model.
+    - accuracy: model's accuracy score.
+    - auc: ROC-AUC score.
+    - y_pred: Predicted CTR values.
+    """
+    # Preprocessing steps (same as before)
+    if data.isnull().sum().any():
+        data = data.dropna()
+
+    categorical_cols = ['user_location', 'ad_type']
+    data = pd.get_dummies(data, columns=categorical_cols, drop_first=True)
+
+    X = data.drop(columns=['CTR'])  # Features
+    y = data['CTR']  # Target variable: CTR (0 = No Click, 1 = Click)
+
+    # Train-Test Split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Initialize and train the XGBoost Classifier
+    model = xgb.XGBClassifier(use_label_encoder=False, random_state=42)
+    model.fit(X_train, y_train)
+
+    # Make predictions
+    y_pred = model.predict(X_test)
+
+    # Evaluate performance
+    accuracy = accuracy_score(y_test, y_pred)
+    auc = roc_auc_score(y_test, y_pred)
+
+    return model, accuracy, auc, y_pred
+
+
+def ctr_prediction_gradient_boosting(data):
+    """
+    Function to predict Click-Through Rate (CTR) using Gradient Boosting Classifier.
+    
+    Parameters:
+    - data: pandas DataFrame, where the last column is 'CTR' (target variable).
+    
+    Returns:
+    - model: trained Gradient Boosting model.
+    - accuracy: model's accuracy score.
+    - auc: ROC-AUC score.
+    - y_pred: Predicted CTR values.
+    """
+    # Preprocessing steps (same as before)
+    if data.isnull().sum().any():
+        data = data.dropna()
+
+    categorical_cols = ['user_location', 'ad_type']
+    data = pd.get_dummies(data, columns=categorical_cols, drop_first=True)
+
+    X = data.drop(columns=['CTR'])  # Features
+    y = data['CTR']  # Target variable: CTR (0 = No Click, 1 = Click)
+
+    # Train-Test Split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Initialize and train the Gradient Boosting Classifier
+    model = GradientBoostingClassifier(random_state=42)
+    model.fit(X_train, y_train)
+
+    # Make predictions
+    y_pred = model.predict(X_test)
+
+    # Evaluate performance
+    accuracy = accuracy_score(y_test, y_pred)
+    auc = roc_auc_score(y_test, y_pred)
+
+    return model, accuracy, auc, y_pred
+```
 
 ### 2.4. Evaluation and Justification
 
