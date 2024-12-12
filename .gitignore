@@ -164,6 +164,8 @@ output/
 .DS_Store
 Doc/
 Project/
-.tmp/
+libs/.tmp/*
+libs/tmp/*
 *.xlsx
 *.txt
+*.csv
